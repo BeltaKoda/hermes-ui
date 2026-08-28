@@ -1151,13 +1151,33 @@ export const $sessionTileEdgeHover = computed(
     dragging === SESSION_TILE_DRAG && ((hint?.pos !== undefined && hint.pos !== 'center') || hint?.stack !== undefined)
 )
 
+interface AdoptMissingPaneOptions {
+  /** Preset application should not preserve stale placeholders for panes that
+   *  are no longer registered. A dynamic pane will be re-adopted from its
+   *  contribution (and therefore its dock hint) when it returns. */
+  registeredOnly?: boolean
+}
+
 /**
- * Adopt panes present in `source` but missing from `target`: each joins the
- * group its source siblings map to in the target (first group as a last
- * resort). Layout changes never lose panes.
+ * Adopt panes present in `source` but missing from `target`. A pane first
+ * follows a source sibling that survived in the target; a lone contributed
+ * pane follows its declarative dock/placement hint. The first group remains
+ * the compatibility fallback for core/default declarations made before their
+ * contributions exist.
  */
-function adoptMissingPanes(target: LayoutNode, source: LayoutNode): LayoutNode {
+function adoptMissingPanes(
+  target: LayoutNode,
+  source: LayoutNode,
+  { registeredOnly = false }: AdoptMissingPaneOptions = {}
+): LayoutNode {
   const have = new Set(allPaneIds(target))
+  const panes = registry.getArea('panes')
+  const contributionOf = (paneId: string) => panes.find(c => c.id === paneId)
+
+  const dataOf = (paneId: string) =>
+    contributionOf(paneId)?.data as { dock?: PaneDockHint; placement?: string } | undefined
+
+  const mainId = panes.find(c => dataOf(c.id)?.placement === 'main')?.id
   let next = target
 
   for (const paneId of allPaneIds(source)) {
@@ -1165,12 +1185,36 @@ function adoptMissingPanes(target: LayoutNode, source: LayoutNode): LayoutNode {
       continue
     }
 
+    const contribution = contributionOf(paneId)
+
+    if (registeredOnly && !contribution) {
+      continue
+    }
+
     const sibling = findGroupOfPane(source, paneId)?.panes.find(p => have.has(p))
-    const targetId = (sibling ? findGroupOfPane(next, sibling)?.id : undefined) ?? groupLeafIds(next)[0]
+    const data = dataOf(paneId)
+    const dock = data?.dock
+
+    const semanticAnchor = allPaneIds(next).find(
+      id => id !== paneId && data?.placement !== undefined && dataOf(id)?.placement === data.placement
+    )
+
+    const anchorPane = sibling ??
+      (dock && have.has(dock.pane) ? dock.pane : undefined) ??
+      semanticAnchor ??
+      (mainId && have.has(mainId) ? mainId : undefined)
+
+    const targetId = (anchorPane ? findGroupOfPane(next, anchorPane)?.id : undefined) ?? groupLeafIds(next)[0]
 
     if (targetId) {
       // Silent adoption: don't steal the target zone's active tab (logs).
-      next = insertAtGroup(next, targetId, paneId, 'center', null, false) ?? next
+      // Source siblings preserve an intentional stack. A lone pane instead
+      // uses its declared dock so applying Focus cannot turn a right-side
+      // Cronjobs pane into a SESSIONS | BOTS | CRONJOBS tab strip.
+      const pos = sibling ? 'center' : dock?.pos ?? 'center'
+      const before = sibling ? null : dock?.before
+
+      next = insertAtGroup(next, targetId, paneId, pos, before, false) ?? next
       have.add(paneId)
     }
   }
@@ -1521,7 +1565,7 @@ export function applyTree(tree: LayoutNode, presetId: string) {
   // a layout hands pane placement back to the app (auto-docking resumes).
   clearAllPaneSizeOverrides()
   saveUserPlaced(new Set())
-  commit(previous ? adoptMissingPanes(tree, previous) : tree)
+  commit(previous ? adoptMissingPanes(tree, previous, { registeredOnly: true }) : tree)
   markActivePreset(presetId)
 
   // Picking a named layout is an intent to SEE its panes. Toggle-gated panes

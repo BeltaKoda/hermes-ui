@@ -131,7 +131,17 @@ export function NarrowOverlays() {
         }
 
         if (mode === 'close') {
-          return current?.id === match.id ? null : current
+          if (current?.id === match.id) {
+            return null
+          }
+
+          // A collapsed Desktop zone is one phone drawer. Sessions and Bots
+          // are zone-mates, so a navigation-driven "close Sessions sidebar"
+          // intent must also close the drawer while its Bots tab is active.
+          const currentTree = $layoutTree.get()
+          const matchGroup = currentTree ? findGroupOfPane(currentTree, match.id) : null
+
+          return current && matchGroup?.panes.includes(current.id) ? null : current
         }
 
         return current?.id === match.id && current.pinned ? null : { id: match.id, pinned: true }

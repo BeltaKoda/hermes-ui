@@ -44,7 +44,15 @@ import {
   setActiveProfile,
   setShowAllProfiles
 } from '@/store/profile'
-import { $activeSessionId, $awaitingResponse, $busy, $currentCwd, $currentModel, $gatewayState } from '@/store/session'
+import {
+  $activeSessionId,
+  $awaitingResponse,
+  $busy,
+  $currentCwd,
+  $currentModel,
+  $gatewayState,
+  setSessionProfileHint
+} from '@/store/session'
 import { runGatewayRestart } from '@/store/system-actions'
 
 // -- state: readonly views over the app's live atoms -------------------------
@@ -64,9 +72,8 @@ export interface ViewportRect {
   narrow: boolean
 }
 
-// Mirrors the app's sidebar-collapse breakpoint (upstream reads the tree
-// store's $narrowViewport; the web shell has no tree store, so the media
-// query is evaluated here directly).
+// Mirrors the app's sidebar-collapse breakpoint. The SDK evaluates the media
+// query directly so this readonly surface stays independent of renderer state.
 const NARROW_MEDIA_QUERY = '(max-width: 64rem)'
 
 const readViewport = (): ViewportRect => ({
@@ -186,6 +193,13 @@ export const host = {
     const profile = (options.profile ?? '').trim()
 
     dismissMobileChatSidebar()
+
+    // Match Desktop's owner-hint behavior. Bot Mode's canonical chats are
+    // deliberately hidden from $sessions, so this explicit profile is the
+    // routing authority when the session route resumes below.
+    if (profile) {
+      setSessionProfileHint(storedSessionId, profile)
+    }
 
     if (profile && profile !== $activeGatewayProfile.get()) {
       await ensureGatewayProfile(profile)

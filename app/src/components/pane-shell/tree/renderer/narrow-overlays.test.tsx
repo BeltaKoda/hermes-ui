@@ -24,7 +24,12 @@ function registerPane(id: string, title: string, data: Record<string, unknown>, 
 }
 
 beforeEach(() => {
-  registerPane('sessions', 'Sessions', { collapsible: true, placement: 'left', width: '237px' }, 'session rows')
+  registerPane(
+    'sessions',
+    'Sessions',
+    { collapsible: true, placement: 'left', revealAliases: ['chat-sidebar'], width: '237px' },
+    'session rows'
+  )
   registerPane('bots', 'Bots', { collapsible: true, placement: 'left', width: '260px' }, 'bot roster')
   registerPane('workspace', 'Chat', { placement: 'main', uncloseable: true }, 'chat')
   $layoutTree.set(split('row', [group(['sessions', 'bots']), group(['workspace'])]))
@@ -57,6 +62,22 @@ describe('NarrowOverlays', () => {
     expect(queryByTestId('sessions-body')).toBeNull()
 
     fireEvent.click(getByLabelText('Close side menu'))
+    expect(queryByTestId('bots-body')).toBeNull()
+  })
+
+  it('dismisses the whole Sessions/Bots drawer when navigation closes its alias', () => {
+    const { getByTestId, queryByTestId } = render(<NarrowOverlays />)
+
+    revealPane('sessions')
+    fireEvent.pointerDown(document.querySelector('[data-narrow-overlay-tab="bots"]')!, { button: 0 })
+    expect(getByTestId('bots-body')).toBeTruthy()
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent(PANE_TOGGLE_REVEAL_EVENT, { detail: { id: 'chat-sidebar', mode: 'close' } })
+      )
+    })
+
     expect(queryByTestId('bots-body')).toBeNull()
   })
 
