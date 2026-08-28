@@ -2568,7 +2568,7 @@ export const zh: Translations = {
     missingPane: paneId => `缺少面板：${paneId}`,
     editTitle: '布局',
     editHint: '选择一个布局，或在区域之间拖动面板。右键点击区域可拆分。',
-    mobileEditHint: '为此手机选择布局。桌面布局不会改变。',
+    mobileEditHint: '为此手机选择布局。从任一侧边向内滑动可打开菜单；桌面布局不会改变。',
     mobileDefault: '默认',
     mobileDefaultDescription: '打开辅助面板时显示它们。',
     mobileFocus: '专注',

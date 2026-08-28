@@ -15,6 +15,7 @@ import {
   FILE_BROWSER_PANE_ID,
   setSidebarOpen
 } from '@/store/layout'
+import { paneSidesForViewport } from '@/store/mobile-layout'
 import { $paneWidthOverride } from '@/store/panes'
 import { $connection } from '@/store/session'
 import { isSecondaryWindow } from '@/store/windows'
@@ -78,6 +79,7 @@ export function AppShell({
   const fileBrowserOpen = useStore($fileBrowserOpen)
   const panesFlipped = useStore($panesFlipped)
   const narrowViewport = useMediaQuery(SIDEBAR_COLLAPSE_MEDIA_QUERY)
+  const { sidebarSide } = paneSidesForViewport(narrowViewport, panesFlipped)
   const fileBrowserWidthOverride = useStore($paneWidthOverride(FILE_BROWSER_PANE_ID))
   const connection = useStore($connection)
   const viewportFullscreen = useSyncExternalStore(subscribeWindowSize, viewportIsFullscreen, () => false)
@@ -113,10 +115,10 @@ export function AppShell({
   // hover-reveal overlay (0px track) below the collapse breakpoint, so the edge
   // is uncovered there regardless of their stored open state. A standalone
   // session window renders no sidebar at all, so its edge is always uncovered.
-  const collapsibleLeftPaneOpen = panesFlipped ? fileBrowserOpen : sidebarOpen
+  const collapsibleLeftPaneOpen = sidebarSide === 'left' ? sidebarOpen : fileBrowserOpen
   // The terminal + preview rails never force-collapse, so when they're the
   // leftmost open pane (flipped layout) they cover the edge even when narrow.
-  const persistentLeftPaneOpen = panesFlipped && (terminalPaneOpen || previewPaneOpen)
+  const persistentLeftPaneOpen = sidebarSide === 'right' && (terminalPaneOpen || previewPaneOpen)
 
   const leftEdgePaneOpen =
     !isSecondaryWindow() && ((!narrowViewport && collapsibleLeftPaneOpen) || persistentLeftPaneOpen)
@@ -147,7 +149,7 @@ export function AppShell({
   //   - file-browser closed → flush against static cluster's left edge
   //   - file-browser open   → flush against the file-browser pane's left edge
   //                           (= preview pane's right edge)
-  const previewToolbarGap = fileBrowserOpen ? fileBrowserWidth : systemToolsWidth
+  const previewToolbarGap = fileBrowserOpen && !narrowViewport ? fileBrowserWidth : systemToolsWidth
 
   // Used by the drag region to know where the rightmost interactive element
   // ends. When pane tools are present, that's `gap + paneCount * controlSize

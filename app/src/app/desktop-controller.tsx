@@ -43,7 +43,12 @@ import {
   SIDEBAR_MAX_WIDTH,
   unpinSession
 } from '../store/layout'
-import { $mobileLayoutPreset, isMobileFocusLayout } from '../store/mobile-layout'
+import {
+  $mobileLayoutPreset,
+  isMobileFocusLayout,
+  panesFlippedForViewport,
+  paneSidesForViewport
+} from '../store/mobile-layout'
 import { respondToApprovalAction } from '../store/native-notifications'
 import { $paneOpen } from '../store/panes'
 import { setPetActivity } from '../store/pet'
@@ -1201,8 +1206,8 @@ export function DesktopController() {
 
   // Flipped layout mirrors the default: sessions sidebar → right, file
   // browser + preview rail → left. Same panes, swapped sides.
-  const sidebarSide = panesFlipped ? 'right' : 'left'
-  const railSide = panesFlipped ? 'left' : 'right'
+  const { railSide, sidebarSide } = paneSidesForViewport(narrowViewport, panesFlipped)
+  const panesFlippedForLayout = panesFlippedForViewport(narrowViewport, panesFlipped)
 
   // Other sidebars docked as real columns on the terminal's rail. Force-collapsed
   // hover-reveal overlays (narrow window) don't take a column, so they don't count.
@@ -1263,6 +1268,7 @@ export function DesktopController() {
       minWidth={FILE_BROWSER_MIN_WIDTH}
       resizable
       side={railSide}
+      swipeReveal
       width={FILE_BROWSER_DEFAULT_WIDTH}
     >
       {/* Key on the project (cwd) so switching projects unmounts the old tree and
@@ -1356,6 +1362,7 @@ export function DesktopController() {
           onOverlayActiveChange={setSidebarOverlayMounted}
           resizable
           side={sidebarSide}
+          swipeReveal
           width={`${SIDEBAR_DEFAULT_WIDTH}px`}
         >
           {sidebar}
@@ -1405,11 +1412,11 @@ export function DesktopController() {
         mirror to file-browser | preview | terminal | main so terminal stays
         adjacent to the chat.
       */}
-      {panesFlipped ? fileBrowserPane : terminalPane}
+      {panesFlippedForLayout ? fileBrowserPane : terminalPane}
       {contributedRightPanes}
       {previewPane}
       {reviewPane}
-      {panesFlipped ? terminalPane : fileBrowserPane}
+      {panesFlippedForLayout ? terminalPane : fileBrowserPane}
     </AppShell>
   )
 }

@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils'
 import { $cronJobs } from '@/store/cron'
 import {
   $dismissedAutoProjectIds,
-  $panesFlipped,
   $pinnedSessionIds,
   $sidebarAgentsGrouped,
   $sidebarCronOpen,
@@ -237,7 +236,6 @@ export function ChatSidebar({
   // Collapsed-but-overlay-mounted → render the full sidebar, not just the nav rail.
   const overlayMounted = useStore($sidebarOverlayMounted)
   const contentVisible = sidebarOpen || overlayMounted
-  const panesFlipped = useStore($panesFlipped)
   const agentsGrouped = useStore($sidebarAgentsGrouped)
   const showCronSessions = useStore($sidebarShowCronSessions)
   const pinnedSessionIds = useStore($pinnedSessionIds)
@@ -1043,7 +1041,7 @@ export function ChatSidebar({
     <Sidebar
       className={cn(
         'relative h-full min-w-0 overflow-hidden border-t-0 border-b-0 text-foreground transition-none',
-        panesFlipped ? 'border-l border-r-0' : 'border-r border-l-0',
+        'in-data-[pane-side=left]:border-r in-data-[pane-side=left]:border-l-0 in-data-[pane-side=right]:border-l in-data-[pane-side=right]:border-r-0',
         sidebarOpen
           ? 'border-(--sidebar-edge-border) bg-(--ui-sidebar-surface-background) opacity-100'
           : 'pointer-events-none border-transparent bg-transparent opacity-0',

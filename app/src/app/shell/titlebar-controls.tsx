@@ -22,6 +22,7 @@ import {
   togglePanesFlipped,
   toggleSidebarOpen
 } from '@/store/layout'
+import { paneSidesForViewport } from '@/store/mobile-layout'
 
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '../layout-constants'
 import { appViewForPath, isOverlayView } from '../routes'
@@ -62,6 +63,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   const panesFlipped = useStore($panesFlipped)
   const narrowViewport = useMediaQuery(SIDEBAR_COLLAPSE_MEDIA_QUERY)
   const [mobileLayoutOpen, setMobileLayoutOpen] = useState(false)
+  const { sidebarSide } = paneSidesForViewport(narrowViewport, panesFlipped)
 
   const toggleHaptics = () => {
     if (!hapticsMuted) {
@@ -95,8 +97,8 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   const fileBrowserEdge = { open: fileBrowserOpen, toggle: edgeToggle(FILE_BROWSER_PANE_ID, toggleFileBrowserOpen) }
   const sessionsEdge = { open: sidebarOpen, toggle: edgeToggle(CHAT_SIDEBAR_PANE_ID, toggleSidebarOpen) }
-  const leftEdge = panesFlipped ? fileBrowserEdge : sessionsEdge
-  const rightEdge = panesFlipped ? sessionsEdge : fileBrowserEdge
+  const leftEdge = sidebarSide === 'left' ? sessionsEdge : fileBrowserEdge
+  const rightEdge = sidebarSide === 'left' ? fileBrowserEdge : sessionsEdge
 
   const leftToolbarTools: TitlebarTool[] = [
     {
@@ -109,6 +111,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
       }
     },
     {
+      hidden: narrowViewport,
       icon: <Codicon name="arrow-swap" />,
       id: 'flip-panes',
       label: t.titlebar.swapSidebarSides,
