@@ -2324,8 +2324,11 @@ export const ja = defineLocale({
     missingPane: paneId => `ペインが見つかりません: ${paneId}`,
     editTitle: 'レイアウト',
     editHint: 'レイアウトを選ぶか、ペインをゾーン間へドラッグ。ゾーンを右クリックで分割。',
+    desktopEditHint: 'デスクトップのワークスペースペインを表示または非表示にします。',
     mobileEditHint:
       'このスマートフォン用のレイアウトを選択します。左右の端からスワイプしてメニューを開けます。デスクトップの配置は変わりません。',
+    panes: 'ペイン',
+    filesPane: 'ファイル',
     mobileDefault: 'デフォルト',
     mobileDefaultDescription: '補助ペインが開いているときに表示します。',
     mobileFocus: 'フォーカス',

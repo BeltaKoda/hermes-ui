@@ -2024,7 +2024,10 @@ export interface Translations {
     missingPane: (paneId: string) => string
     editTitle: string
     editHint: string
+    desktopEditHint: string
     mobileEditHint: string
+    panes: string
+    filesPane: string
     mobileDefault: string
     mobileDefaultDescription: string
     mobileFocus: string

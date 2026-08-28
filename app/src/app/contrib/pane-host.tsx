@@ -22,10 +22,13 @@
 import { useStore } from '@nanostores/react'
 import { atom, computed, type ReadableAtom } from 'nanostores'
 
+import { Button } from '@/components/ui/button'
+import { Codicon } from '@/components/ui/codicon'
 import { ContribBoundary, ContribRender } from '@/contrib/react/boundary'
 import { useContributions } from '@/contrib/react/use-contributions'
 import { registry } from '@/contrib/registry'
 import type { Contribution } from '@/contrib/types'
+import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { readKey, writeKey } from '@/lib/storage'
 import { cn } from '@/lib/utils'
@@ -238,11 +241,33 @@ export function contributedPaneWidth(pane: Contribution): string {
  *  wrapper stays in desktop-controller's JSX — the pane shell resolves panes
  *  from its DIRECT children, so the wrapper cannot live behind a component
  *  boundary. */
-export function ContributedRightPaneBody({ pane }: { pane: Contribution }) {
+export function ContributedRightPaneBody({ onClose, pane }: { onClose: () => void; pane: Contribution }) {
+  const { t } = useI18n()
+  const label = pane.title ?? pane.id
+
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-(--ui-sidebar-surface-background)" data-contributed-pane={pane.id}>
-      <div className="group/pane-header relative flex h-7 shrink-0 select-none bg-(--ui-sidebar-surface-background)" role="tablist">
-        <PaneTab active label={pane.title ?? pane.id} onSelect={() => undefined} />
+    <div
+      className="flex h-full min-h-0 flex-col overflow-hidden bg-(--ui-sidebar-surface-background)"
+      data-contributed-pane={pane.id}
+    >
+      <div
+        className="group/pane-header relative flex h-7 shrink-0 select-none bg-(--ui-sidebar-surface-background)"
+        role="tablist"
+      >
+        <PaneTab active label={label} onSelect={() => undefined} />
+        <Button
+          aria-label={`${t.common.close} ${label}`}
+          className="ml-auto size-7 rounded-none text-(--ui-text-tertiary) hover:text-foreground"
+          onClick={() => {
+            triggerHaptic('tap')
+            onClose()
+          }}
+          size="icon-xs"
+          title={`${t.common.close} ${label}`}
+          variant="ghost"
+        >
+          <Codicon name="close" />
+        </Button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <ContribBoundary id={pane.id} variant="pane">

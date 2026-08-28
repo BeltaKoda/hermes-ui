@@ -27,7 +27,7 @@ import { paneSidesForViewport } from '@/store/mobile-layout'
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '../layout-constants'
 import { appViewForPath, isOverlayView } from '../routes'
 
-import { MobileLayoutPicker } from './mobile-layout-picker'
+import { LayoutPicker } from './layout-picker'
 import { titlebarButtonClass } from './titlebar'
 
 export interface TitlebarTool {
@@ -137,7 +137,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   // Static system tools — always pinned to the screen's right edge.
   const systemTools: TitlebarTool[] = [
     {
-      hidden: !narrowViewport,
       icon: <Codicon name="layout" />,
       id: 'mobile-layout',
       label: t.titlebar.layoutEditor,
@@ -229,7 +228,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
         <TitlebarToolButton navigate={navigate} tool={rightSidebarTool} />
       </div>
 
-      <MobileLayoutPicker onOpenChange={setMobileLayoutOpen} open={mobileLayoutOpen} />
+      <LayoutPicker mobile={narrowViewport} onOpenChange={setMobileLayoutOpen} open={mobileLayoutOpen} />
     </>
   )
 }

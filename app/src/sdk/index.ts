@@ -29,6 +29,7 @@ import { atom, type ReadableAtom } from 'nanostores'
 
 import { $paneVisible } from '@/app/contrib/pane-host'
 import { sessionRoute } from '@/app/routes'
+import { dismissMobileChatSidebar } from '@/app/shell/mobile-pane-navigation'
 import { deleteProfile as deleteProfileRest, getLogs, getStatus, type HermesGateway } from '@/hermes'
 import { $gateway, openGatewayForProfile, retireProfileGateway } from '@/store/gateway'
 import { notify, notifyError } from '@/store/notifications'
@@ -42,14 +43,7 @@ import {
   setActiveProfile,
   setShowAllProfiles
 } from '@/store/profile'
-import {
-  $activeSessionId,
-  $awaitingResponse,
-  $busy,
-  $currentCwd,
-  $currentModel,
-  $gatewayState
-} from '@/store/session'
+import { $activeSessionId, $awaitingResponse, $busy, $currentCwd, $currentModel, $gatewayState } from '@/store/session'
 import { runGatewayRestart } from '@/store/system-actions'
 
 // -- state: readonly views over the app's live atoms -------------------------
@@ -125,6 +119,7 @@ export const host = {
 
   /** Navigate the app router (hash routes, e.g. '/skills'). */
   navigate: (path: string) => {
+    dismissMobileChatSidebar()
     window.location.hash = path.startsWith('#') ? path : `#${path}`
   },
 
@@ -189,6 +184,8 @@ export const host = {
   ): Promise<void> => {
     const profile = (options.profile ?? '').trim()
 
+    dismissMobileChatSidebar()
+
     if (profile && profile !== $activeGatewayProfile.get()) {
       await ensureGatewayProfile(profile)
 
@@ -204,6 +201,7 @@ export const host = {
   /** Start a fresh chat draft, optionally pointed at another profile (its
    *  backend spins up in the background). */
   newChat: (profile?: null | string): void => {
+    dismissMobileChatSidebar()
     newSessionInProfile((profile ?? '').trim() || $activeGatewayProfile.get())
     window.location.hash = '#/'
   },

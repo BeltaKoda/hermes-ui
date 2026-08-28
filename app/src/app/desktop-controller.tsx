@@ -50,7 +50,7 @@ import {
   paneSidesForViewport
 } from '../store/mobile-layout'
 import { respondToApprovalAction } from '../store/native-notifications'
-import { $paneOpen } from '../store/panes'
+import { $paneOpen, setPaneOpen } from '../store/panes'
 import { setPetActivity } from '../store/pet'
 import { setPetScale } from '../store/pet-gallery'
 import {
@@ -134,6 +134,7 @@ import { AppShell } from './shell/app-shell'
 import { useOverlayRouting } from './shell/hooks/use-overlay-routing'
 import { useStatusSnapshot } from './shell/hooks/use-status-snapshot'
 import { useStatusbarItems } from './shell/hooks/use-statusbar-items'
+import { dismissMobileChatSidebar } from './shell/mobile-pane-navigation'
 import { ModelMenuPanel } from './shell/model-menu-panel'
 import type { StatusbarItem } from './shell/statusbar-controls'
 import type { TitlebarTool } from './shell/titlebar-controls'
@@ -1063,9 +1064,18 @@ export function DesktopController() {
         setCronFocusJobId(jobId)
         navigate(CRON_ROUTE)
       }}
-      onNavigate={selectSidebarItem}
-      onNewSessionInWorkspace={startSessionInWorkspace}
-      onResumeSession={sessionId => navigate(sessionRoute(sessionId))}
+      onNavigate={item => {
+        selectSidebarItem(item)
+        dismissMobileChatSidebar()
+      }}
+      onNewSessionInWorkspace={path => {
+        startSessionInWorkspace(path)
+        dismissMobileChatSidebar()
+      }}
+      onResumeSession={sessionId => {
+        navigate(sessionRoute(sessionId))
+        dismissMobileChatSidebar()
+      }}
       onTriggerCronJob={jobId => {
         void triggerCronJob(jobId)
           .then(() => refreshCronJobs())
@@ -1235,7 +1245,7 @@ export function DesktopController() {
       side={railSide}
       width={contributedPaneWidth(pane)}
     >
-      <ContributedRightPaneBody pane={pane} />
+      <ContributedRightPaneBody onClose={() => setPaneOpen(`contrib:${pane.id}`, false)} pane={pane} />
     </Pane>
   ))
 
