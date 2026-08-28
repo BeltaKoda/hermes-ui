@@ -12,7 +12,10 @@ describe('dismissMobileChatSidebar', () => {
   })
 
   it('closes the Sessions/Bots reveal drawer on a narrow viewport', () => {
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true }) as MediaQueryList))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true }) as MediaQueryList)
+    )
     const listener = vi.fn()
 
     window.addEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)
@@ -21,13 +24,16 @@ describe('dismissMobileChatSidebar', () => {
 
     expect(listener).toHaveBeenCalledOnce()
     expect((listener.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({
-      action: 'close',
-      id: CHAT_SIDEBAR_PANE_ID
+      id: CHAT_SIDEBAR_PANE_ID,
+      mode: 'close'
     })
   })
 
   it('leaves the docked desktop sidebar open', () => {
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false }) as MediaQueryList))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: false }) as MediaQueryList)
+    )
     const listener = vi.fn()
 
     window.addEventListener(PANE_TOGGLE_REVEAL_EVENT, listener)

@@ -20,16 +20,17 @@
  *    so rendering them inside a plugin dialog would read/write the ACTIVE
  *    profile instead of the plugin's target. Plugins keep their own staged
  *    fallbacks, which route every RPC through an explicit `profile` param.
- *  - `host.paneVisibility` is backed by the web pane host (sidebar tab state)
+ *  - `host.paneVisibility` is backed by the shared Desktop layout tree
  *    instead of the layout tree — same semantics: "holding its zone's active
  *    tab slot".
  */
 
 import { atom, type ReadableAtom } from 'nanostores'
 
-import { $paneVisible } from '@/app/contrib/pane-host'
+import { PANES_AREA } from '@/app/contrib/layout'
 import { sessionRoute } from '@/app/routes'
 import { dismissMobileChatSidebar } from '@/app/shell/mobile-pane-navigation'
+import { $paneVisible } from '@/components/pane-shell/tree/store'
 import { deleteProfile as deleteProfileRest, getLogs, getStatus, type HermesGateway } from '@/hermes'
 import { $gateway, openGatewayForProfile, retireProfileGateway } from '@/store/gateway'
 import { notify, notifyError } from '@/store/notifications'
@@ -251,7 +252,7 @@ export {
   type ComposerMiddleware
 } from '@/app/chat/composer/contrib'
 export { PALETTE_AREA, type PaletteContribution } from '@/app/command-palette/contrib'
-export { PANES_AREA } from '@/app/contrib/pane-host'
+export { PANES_AREA }
 
 // -- ui: the design language --------------------------------------------------
 

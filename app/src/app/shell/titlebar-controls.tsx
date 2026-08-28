@@ -1,8 +1,10 @@
 import { useStore } from '@nanostores/react'
-import { type ComponentProps, type ReactNode, useState } from 'react'
+import { type ComponentProps, type MouseEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { PANE_TOGGLE_REVEAL_EVENT } from '@/components/pane-shell'
+import { toggleLayoutEditMode } from '@/components/pane-shell/edit-mode'
+import { resetLayoutTree } from '@/components/pane-shell/tree/store'
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { Tip } from '@/components/ui/tooltip'
@@ -22,12 +24,10 @@ import {
   togglePanesFlipped,
   toggleSidebarOpen
 } from '@/store/layout'
-import { paneSidesForViewport } from '@/store/mobile-layout'
 
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '../layout-constants'
 import { appViewForPath, isOverlayView } from '../routes'
 
-import { LayoutPicker } from './layout-picker'
 import { titlebarButtonClass } from './titlebar'
 
 export interface TitlebarTool {
@@ -39,7 +39,7 @@ export interface TitlebarTool {
   hidden?: boolean
   href?: string
   icon: ReactNode
-  onSelect?: () => void
+  onSelect?: (event?: MouseEvent<HTMLButtonElement>) => void
   title?: string
   to?: string
 }
@@ -62,8 +62,7 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   const sidebarOpen = useStore($sidebarOpen)
   const panesFlipped = useStore($panesFlipped)
   const narrowViewport = useMediaQuery(SIDEBAR_COLLAPSE_MEDIA_QUERY)
-  const [mobileLayoutOpen, setMobileLayoutOpen] = useState(false)
-  const { sidebarSide } = paneSidesForViewport(narrowViewport, panesFlipped)
+  const sidebarSide = narrowViewport || !panesFlipped ? 'left' : 'right'
 
   const toggleHaptics = () => {
     if (!hapticsMuted) {
@@ -138,12 +137,20 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   const systemTools: TitlebarTool[] = [
     {
       icon: <Codicon name="layout" />,
-      id: 'mobile-layout',
+      id: 'layout',
       label: t.titlebar.layoutEditor,
-      onSelect: () => {
+      onSelect: event => {
+        if (event?.metaKey || event?.ctrlKey) {
+          triggerHaptic('warning')
+          resetLayoutTree()
+
+          return
+        }
+
         triggerHaptic('open')
-        setMobileLayoutOpen(true)
-      }
+        toggleLayoutEditMode()
+      },
+      title: t.titlebar.layoutEditorTitle
     },
     {
       active: hapticsMuted,
@@ -227,8 +234,6 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
         {settingsTool && <TitlebarToolButton navigate={navigate} tool={settingsTool} />}
         <TitlebarToolButton navigate={navigate} tool={rightSidebarTool} />
       </div>
-
-      <LayoutPicker mobile={narrowViewport} onOpenChange={setMobileLayoutOpen} open={mobileLayoutOpen} />
     </>
   )
 }
@@ -264,12 +269,12 @@ function TitlebarToolButton({ navigate, tool }: { navigate: ReturnType<typeof us
         aria-pressed={tool.active ?? undefined}
         className={className}
         disabled={tool.disabled}
-        onClick={() => {
+        onClick={event => {
           if (tool.to) {
             navigate(tool.to)
           }
 
-          tool.onSelect?.()
+          tool.onSelect?.(event)
         }}
         onPointerDown={event => event.stopPropagation()}
         size="icon-titlebar"

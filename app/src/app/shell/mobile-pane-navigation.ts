@@ -12,7 +12,7 @@ export function dismissMobileChatSidebar(): void {
 
   window.dispatchEvent(
     new CustomEvent(PANE_TOGGLE_REVEAL_EVENT, {
-      detail: { action: 'close', id: CHAT_SIDEBAR_PANE_ID }
+      detail: { id: CHAT_SIDEBAR_PANE_ID, mode: 'close' }
     })
   )
 }
