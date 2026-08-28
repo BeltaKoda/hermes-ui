@@ -43,6 +43,7 @@ import {
   SIDEBAR_MAX_WIDTH,
   unpinSession
 } from '../store/layout'
+import { $mobileLayoutPreset, isMobileFocusLayout } from '../store/mobile-layout'
 import { respondToApprovalAction } from '../store/native-notifications'
 import { $paneOpen } from '../store/panes'
 import { setPetActivity } from '../store/pet'
@@ -209,11 +210,13 @@ export function DesktopController() {
   const fileBrowserOpen = useStore($fileBrowserOpen)
   const previewPaneOpen = useStore($paneOpen(PREVIEW_PANE_ID))
   const panesFlipped = useStore($panesFlipped)
+  const mobileLayoutPreset = useStore($mobileLayoutPreset)
   const profileScope = useStore($profileScope)
   // Below SIDEBAR_COLLAPSE_BREAKPOINT_PX there's no room for a docked rail —
   // collapse both sidebars (without touching their stored open state) so the
   // hover-reveal overlay becomes the way in. Restores once it's wide again.
   const narrowViewport = useMediaQuery(SIDEBAR_COLLAPSE_MEDIA_QUERY)
+  const mobileFocusLayout = isMobileFocusLayout(narrowViewport, mobileLayoutPreset)
 
   const routedSessionId = routeSessionId(location.pathname)
   const routeToken = `${location.pathname}:${location.search}:${location.hash}`
@@ -1204,7 +1207,7 @@ export function DesktopController() {
   // Other sidebars docked as real columns on the terminal's rail. Force-collapsed
   // hover-reveal overlays (narrow window) don't take a column, so they don't count.
   const railColumnOpen =
-    (chatOpen && Boolean(previewTarget || filePreviewTarget) && previewPaneOpen) ||
+    (chatOpen && !mobileFocusLayout && Boolean(previewTarget || filePreviewTarget) && previewPaneOpen) ||
     (chatOpen && !narrowViewport && fileBrowserOpen) ||
     (chatOpen && Boolean(currentCwd.trim()) && !narrowViewport && reviewOpen)
 
@@ -1218,7 +1221,7 @@ export function DesktopController() {
   // direct PaneShell children (see pane-host), hence the inline array.
   const contributedRightPanes = useWorkspaceRightPanes().map(pane => (
     <Pane
-      disabled={!chatOpen}
+      disabled={!chatOpen || mobileFocusLayout}
       divider
       id={`contrib:${pane.id}`}
       key={`contrib:${pane.id}`}
@@ -1233,7 +1236,7 @@ export function DesktopController() {
 
   const previewPane = (
     <Pane
-      disabled={!chatOpen || (!previewTarget && !filePreviewTarget)}
+      disabled={!chatOpen || mobileFocusLayout || (!previewTarget && !filePreviewTarget)}
       id={PREVIEW_PANE_ID}
       key="preview"
       maxWidth={PREVIEW_RAIL_MAX_WIDTH}
@@ -1242,7 +1245,7 @@ export function DesktopController() {
       side={railSide}
       width={PREVIEW_RAIL_PANE_WIDTH}
     >
-      {chatOpen ? (
+      {chatOpen && !mobileFocusLayout ? (
         <ChatPreviewRail onRestartServer={restartPreviewServer} setTitlebarToolGroup={setTitlebarToolGroup} />
       ) : null}
     </Pane>
@@ -1303,7 +1306,7 @@ export function DesktopController() {
     <Pane
       bottomRow={terminalAsRow}
       defaultOpen
-      disabled={!terminalSidebarOpen}
+      disabled={!terminalSidebarOpen || mobileFocusLayout}
       divider
       height="38vh"
       id="terminal-sidebar"
@@ -1338,9 +1341,9 @@ export function DesktopController() {
       mainOverlays={mainOverlays}
       onOpenSettings={openSettings}
       overlays={overlays}
-      previewPaneOpen={chatOpen && Boolean(previewTarget || filePreviewTarget)}
+      previewPaneOpen={chatOpen && !mobileFocusLayout && Boolean(previewTarget || filePreviewTarget)}
       statusbarItems={statusbarItems}
-      terminalPaneOpen={terminalSidebarOpen}
+      terminalPaneOpen={terminalSidebarOpen && !mobileFocusLayout}
       titlebarTools={titlebarToolGroups.flat.right}
     >
       {!isSecondaryWindow() && (

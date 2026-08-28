@@ -1,12 +1,12 @@
 import { useStore } from '@nanostores/react'
-import type { ComponentProps, ReactNode } from 'react'
+import { type ComponentProps, type ReactNode, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { PANE_TOGGLE_REVEAL_EVENT } from '@/components/pane-shell'
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { Tip } from '@/components/ui/tooltip'
-import { matchesQuery } from '@/hooks/use-media-query'
+import { matchesQuery, useMediaQuery } from '@/hooks/use-media-query'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,7 @@ import {
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '../layout-constants'
 import { appViewForPath, isOverlayView } from '../routes'
 
+import { MobileLayoutPicker } from './mobile-layout-picker'
 import { titlebarButtonClass } from './titlebar'
 
 export interface TitlebarTool {
@@ -59,6 +60,8 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
   const fileBrowserOpen = useStore($fileBrowserOpen)
   const sidebarOpen = useStore($sidebarOpen)
   const panesFlipped = useStore($panesFlipped)
+  const narrowViewport = useMediaQuery(SIDEBAR_COLLAPSE_MEDIA_QUERY)
+  const [mobileLayoutOpen, setMobileLayoutOpen] = useState(false)
 
   const toggleHaptics = () => {
     if (!hapticsMuted) {
@@ -130,6 +133,16 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
 
   // Static system tools — always pinned to the screen's right edge.
   const systemTools: TitlebarTool[] = [
+    {
+      hidden: !narrowViewport,
+      icon: <Codicon name="layout" />,
+      id: 'mobile-layout',
+      label: t.titlebar.layoutEditor,
+      onSelect: () => {
+        triggerHaptic('open')
+        setMobileLayoutOpen(true)
+      }
+    },
     {
       active: hapticsMuted,
       icon: <Codicon name={hapticsMuted ? 'mute' : 'unmute'} />,
@@ -212,6 +225,8 @@ export function TitlebarControls({ leftTools = [], tools = [], onOpenSettings }:
         {settingsTool && <TitlebarToolButton navigate={navigate} tool={settingsTool} />}
         <TitlebarToolButton navigate={navigate} tool={rightSidebarTool} />
       </div>
+
+      <MobileLayoutPicker onOpenChange={setMobileLayoutOpen} open={mobileLayoutOpen} />
     </>
   )
 }
